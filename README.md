@@ -1,1 +1,1 @@
-# foxp-striatal-compensation
+# FOXP Striatal Compensation
