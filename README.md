@@ -1,16 +1,21 @@
 # FOXP Striatal Compensation
 
 ## Meta data extracted from Seurat Objects
-[`RNA`](snRNA-seq data analysis)
-[`ATAC`](snATAC-seq data analysis)
+[`snRNA-seq data analysis`](RNA)
+
+[`snATAC-seq data analysis`](ATAC)
+
+
+
 
 ## Meta data extracted from Seurat Objects
 ### P09 RNA
-META_P09_RNA.tsv
+[`META_P09_RNA`](META_P09_RNA.tsv)
 
 ### P09 ATAC
-META_P09_ATAC.tsv
+[`META_P09_ATAC`](META_P09_ATAC.tsv)
 
 ### P56 RNA
-META_P56_RNA.tsv
+[`META_P56_RNA`](META_P56_RNA.tsv)
+
 
