@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH --job-name runcrpre1
+#SBATCH -p 256GB       # partition (queue)
+#SBATCH -N 1
+#SBATCH -t 2-0:0:00
+#SBATCH -o runcrpre1_%j.out
+#SBATCH -e runcrpre1_%j.err
+
+
+echo "===> LOAD MODULES AND PACKAGES <==="
+
+module load bcl2fastq/2.19.1
+module add fastqc/0.11.5
+module add samtools/1.6
+module load cellranger/3.0.2
+
+
+
+echo "===> SETTING PATHS <==="
+
+FASTQPATH="/work/Neuroinformatics_Core/akulk1/CELLRANGER/NA_DATA/P56/00_CELLRANGER/01_FASTQ"
+GENOMEINDEX="/work/Neuroinformatics_Core/akulk1/RESOURCES/DATABASES/MM10_GRCm38p6_GENCODEvM17_PREMRNA_CELLRANGER"
+
+
+
+echo "===> ALIGN COUNT <==="
+
+for lib in NA1 NA3
+ do
+  echo "Processing", ${lib}
+  /work/Neuroinformatics_Core/akulk1/RESOURCES/TOOLS/cellranger-3.0.2/cellranger count --id=${lib} --fastqs=${FASTQPATH}"/"${lib} --sample=${lib} --transcriptome=/work/Neuroinformatics_Core/akulk1/RESOURCES/DATABASES/MM10_GRCm38p6_GENCODEvM17_PREMRNA_CELLRANGER --expect-cells=10000
+ done
+
+echo "===> FINISHED ALIGN COUNT <==="
+
+
+# /cm/shared/apps/cellranger/3.0.2/cellranger-cs/3.0.2/bin/count --id=AO1 --fastqs=/work/Neuroinformatics_Core/akulk1/CELLRANGER/NEW_NOVA/01_FASTQ --sample=AO1 --transcriptome=/work/Neuroinformatics_Core/akulk1/RESOURCES/DATABASES/MM10_GRCm38p6_GENCODEvM17_PREMRNA_CELLRANGER --expect-cells=10000
+##-------------------------------
+## END
+##-------------------------------
+
+
+/endosome/work/Neuroinformatics_Core/akulk1/RESOURCES/TOOLS/cellranger-3.0.2/cellranger-cs/3.0.2/bin/count --id=NA1 --fastqs=/work/Neuroinformatics_Core/akulk1/CELLRANGER/NA_DATA/P56/00_CELLRANGER/01_FASTQ/NA1 --sample=NA1 --transcriptome=/work/Neuroinformatics_Core/akulk1/RESOURCES/DATABASES/MM10_GRCm38p6_GENCODEvM17_PREMRNA_CELLRANGER --expect-cells=10000
+

@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name cellbender3
+# Number of nodes required to run this job
+#SBATCH -p 256GB
+#SBATCH -N 1
+#SBATCH --mem 252928      # Memory Requirement (MB)
+#SBATCH -t 3-0:0:00
+#SBATCH -o cellbender3_%j.out
+#SBATCH -e cellbender3_%j.err
+
+
+# module purge && module load shared slurm python/3.7.x-anaconda
+# module load gcc/8.3.0
+# module load hdf5_18/1.8.17
+# module load R/4.0.2-gccmkl
+
+# conda create -n cellbender python=3.7
+# conda activate cellbender
+# conda deactivate
+
+cd /work/Neuroinformatics_Core/akulk1/CELLRANGER/NA_DATA/P09/01_COUNTS_RAW/TODO
+
+ls | grep -P "^NA" | xargs -I % -n 1 -P 24 sh -c 'echo %; cellbender remove-background --input % --output %/CellBender_Out.h5 --expected-cells 10000 --total-droplets-included 80000 --learning-rate 0.00001'
+

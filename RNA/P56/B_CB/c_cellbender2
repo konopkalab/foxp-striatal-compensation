@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --job-name cellbender2
+# Number of nodes required to run this job
+#SBATCH -p 384GB
+#SBATCH -N 1
+#SBATCH --mem 381952      # Memory Requirement (MB)
+#SBATCH -t 5-0:0:00
+#SBATCH -o cellbender2_%j.out
+#SBATCH -e cellbender2_%j.err
+
+
+# module purge && module load shared slurm python/3.7.x-anaconda
+# module load gcc/8.3.0
+# module load hdf5_18/1.8.17
+# module load R/4.0.2-gccmkl
+
+# conda create -n CellBenderNA python=3.7
+# conda activate CellBenderNA
+## conda install -c anaconda pytables
+## conda install pytorch torchvision -c pytorch
+## git clone https://github.com/broadinstitute/CellBender.git
+## pip install -e CellBender
+# conda deactivate
+
+# cd /work/Neuroinformatics_Core/akulk1/CELLRANGER/NITIN_NEWAZ_JAN2022/06_CELLBENDER/MAIN
+
+# ls | grep -P "^A[1-4]$" | xargs -I % -n 1 -P 48 sh -c 'echo %; cellbender remove-background --input % --output %/CellBender_Out.h5 --expected-cells 10000 --total-droplets-included 10000'
+
+# ls | grep -P "^NA[1-3][0-9]" | xargs -I % -n 1 -P 24 sh -c 'echo %; cellbender remove-background --input % --output %/CellBender_Out.h5 --expected-cells 10000 --total-droplets-included 20000'
+
+# ls | grep -P "^P1CKO_" | xargs -I % -n 1 -P 24 sh -c 'echo %; cellbender remove-background --input % --output %/CellBender_Out.h5 --expected-cells 10000 --total-droplets-included 70000 --fpr 0.05'
+
+ls | grep -P "^P1CKO_" | xargs -I % -n 1 -P 24 sh -c 'echo %; cellbender remove-background --input % --output %/CellBender_Out.h5 --expected-cells 10000 --total-droplets-included 70000 --fpr 0.1'

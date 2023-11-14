@@ -1,0 +1,666 @@
+##-------------------------------------------------------
+## SEURAT ANALYSIS | MODULES & LIBRARIES
+##-------------------------------------------------------
+# module purge && module load shared slurm python/3.7.x-anaconda
+# module load gcc/8.3.0
+# module load hdf5_18/1.8.17
+# module load R/4.1.1-gccmkl
+
+##-------------------------------------------------------
+## LOAD LIBRARIES
+rm(list = ls())
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(reshape2)
+library(clustree)
+library(harmony)
+library(scCustomize)
+set.seed(10)
+
+
+## https://htmlpreview.github.io/?https://github.com/satijalab/seurat.wrappers/blob/master/docs/harmony.html
+
+
+
+# ##-------------------------------------------------------
+# ## SUBCLUSTERING
+# load("./../SEURAT_NA_P09_INTERGRATION_HARMONY.RData")
+# # seuObjFilt
+
+# Idents(seuObjFilt) <- "RNA_snn_res.1.2"
+# DefaultAssay(seuObjFilt) <- "RNA"
+# seuObjFilt <- NormalizeData(seuObjFilt)
+
+# clusters2keep <- sort(c(12, 7, 33, 10, 1, 2, 4, 9, 0, 5, 8, 19, 26, 11))
+
+# seuObjSel <- subset(seuObjFilt, idents = clusters2keep, slot = "counts")
+
+# table(seuObjSel$GenoAgeSample)
+# #     CTL_P09_NA13     CTL_P09_NA14     CTL_P09_NA29   P1CKO_P09_NA32 
+# #             8720            12645            12734            11490 
+# #   P1CKO_P09_NA33   P1CKO_P09_NA42 P1P2CKO_P09_NA15 P1P2CKO_P09_NA20 
+# #             7266            11067            10034             7883 
+# # P1P2CKO_P09_NA24   P2CKO_P09_NA16   P2CKO_P09_NA22   P2CKO_P09_NA43 
+# #            11425             4252             7716            19462
+
+# table(seuObjSel$Genotype)
+# #     CTL   P1CKO P1P2CKO   P2CKO 
+# #   34099   29823   29342   31430
+
+# table(seuObjSel$Batch)
+# #     1     2     3     4     5 
+# # 35651 27024 12734 18756 30529
+
+# table(seuObjSel$Sex)
+# #     F     M 
+# # 87641 37053
+
+
+
+# ##-------------------------------------------------------
+# ## PREPROCESS
+# seuObjSel <- NormalizeData(seuObjSel) %>% FindVariableFeatures() %>% ScaleData() %>% RunPCA(verbose = FALSE, npcs = 30)
+
+# ##-------------------------------------------------------
+# ## HARMONY
+# seuObjSel <- RunHarmony(seuObjSel, group.by.vars = c("Batch", "Sex"))
+
+# ##-------------------------------------------------------
+# ## CLUSTERING
+# seuObjSel <- RunUMAP(seuObjSel, reduction = "harmony", dims = 1:30)
+# myres <- c(0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0)
+# seuObjSel <- FindNeighbors(seuObjSel, reduction = "harmony", dims = 1:30) %>% FindClusters(resolution = myres)
+
+# ##-------------------------------------------------------
+# ## SAVE RDATA
+# save(seuObjSel, file = "SEURAT_NA_P09_INTERGRATION_HARMONY_SPN.RData")
+
+
+# ##-------------------------------------------------------
+# ## PLOTS
+# seutree <- clustree(seuObjSel, prefix = "RNA_snn_res.", node_colour = "sc3_stability") # + scale_color_brewer(palette = "Set1") + scale_edge_color_continuous(low = "blue", high = "red")
+# ggsave(filename = "SEURAT_NA_P09_INTERGRATION_HARMONY_CLUSTREE.pdf", plot = seutree, width = 24, height = 24, units = "in", dpi = 150)
+
+
+# ## UMAP FOR ALL RESOLUTIONS
+# ResolutionList <- grep("RNA_snn_res", colnames(seuObjSel@meta.data), value = TRUE)
+
+# DefaultAssay(seuObjSel) <- "RNA"
+
+# for (Resolution in ResolutionList)
+#     {
+#     print(paste("====> RESOLUTION ", Resolution, sep = ""))
+
+#     pdf(paste0("SEURAT_NK_P09_INTEGRATE_UMAP_RES_", Resolution, ".pdf"), width = 7, height = 6)
+#     g <- DimPlot(object = seuObjSel, label = TRUE, reduction = "umap", group.by = Resolution)
+#     print(g)
+#     dev.off()
+
+#     pdf(paste0("SEURAT_NK_P09_INTEGRATE_VIOLIN_nUMI_RES_", Resolution, ".pdf"), width = 9, height = 3)
+#     v <- VlnPlot(object = seuObjSel, features = "nCount_RNA", ncol = 1, pt.size = 0, group.by = Resolution)
+#     print(v)
+#     dev.off()
+#     }
+
+
+
+
+
+# my_levels <- seq(0, max(as.numeric(seuObjSel$RNA_snn_res.0.8)) - 1)
+# seuObjSel$RNA_snn_res.0.8 <- factor(x = seuObjSel$RNA_snn_res.0.8, levels = my_levels)
+
+# mygenes <- c("Mki67", "Sox4", "Sox11", "Foxp1", "Foxp2", "Drd", "Drd2", "Tac1", "Penk", "Casz1", "Aqp4", "Olig1", "Cspg4", "Mag", "Cx3cr1", "Flt1", "Slc17a7", "Chat", "Dlx2", "Npy", "Ascl1", "Sp9", "Ppp1r1b", "Oprm1", "Isl1", "Pdyn", "Lypd1", "Nnat", "Ebf1", "Epha4", "Mef2c")
+
+# vpl2 <- Stacked_VlnPlot(seurat_object = seuObjSel, features = mygenes, group.by = "RNA_snn_res.0.8", pt.size = 0, x_lab_rotate = TRUE)
+# ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_0.8_B.pdf", plot = vpl2 , width = 9, height = 18, units = "in", dpi = 150, useDingbats=FALSE)
+
+# vpl3 <- Stacked_VlnPlot(seurat_object = seuObjSel, features = c("nCount_RNA", "nFeature_RNA"), group.by = "RNA_snn_res.0.8", pt.size = 0, x_lab_rotate = TRUE)
+# ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_0.8_C.pdf", plot = vpl3 , width = 9, height = 5, units = "in", dpi = 150, useDingbats=FALSE)
+
+# dpl2 <- DotPlot_scCustom(seurat_object = seuObjSel, features = rev(mygenes), colors_use = viridis_plasma_dark_high, group.by = "RNA_snn_res.0.8", x_lab_rotate = TRUE)
+# ggsave(filename = "NA_SEURAT_PLOT_DotPlot_0.8.pdf", plot = dpl2, width = 12, height = 16, units = "in", dpi = 150, useDingbats=FALSE)
+
+
+# fpl1 <- FeaturePlot_scCustom(seurat_object = seuObjSel, features = mygenes, reduction = "umap", pt.size = 0.05, min.cutoff = 0, max.cutoff = 3, order = TRUE, raster = TRUE)
+# ggsave(filename = "NA_SEURAT_PLOT_FeaturePlot_orderT.pdf", plot = fpl1, width = 24, height = 24, units = "in", dpi = 150)
+
+# fpl2 <- FeaturePlot_scCustom(seurat_object = seuObjSel, features = mygenes, reduction = "umap", pt.size = 0.05, min.cutoff = 0, max.cutoff = 3, order = FALSE, raster = TRUE)
+# ggsave(filename = "NA_SEURAT_PLOT_FeaturePlot_orderF.pdf", plot = fpl2, width = 24, height = 24, units = "in", dpi = 150)
+
+# vpl1 <- Stacked_VlnPlot(seurat_object = seuObjSel, features = mygenes, x_lab_rotate = TRUE, group.by = "RNA_snn_res.0.8")
+# ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_Res1.2.pdf", plot = vpl1, width = 24, height = 24, units = "in", dpi = 150)
+
+
+# plotCluUMAP1 <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "Genotype", pt.size = 0.1, reduction = "umap", label = FALSE, raster = TRUE)
+# ggsave(filename = "NA_SEURAT_UMAP_GENOTYPE.pdf", plot = plotCluUMAP1, width = 10, height = 8, units = "in", dpi = 300)
+
+# plotCluUMAP1b <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "Genotype", split.by = "Genotype", num_columns = 4, pt.size = 0.1, reduction = "umap", raster = TRUE)
+# ggsave(filename = "NA_SEURAT_UMAP_GENOTYPE_FACET.pdf", plot = plotCluUMAP1b, width = 32, height = 8, units = "in", dpi = 300)
+
+# plotCluUMAP1c <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "GenoAgeSample", split.by = "GenoAgeSample", num_columns = 4, pt.size = 0.1, reduction = "umap", raster = TRUE)
+# ggsave(filename = "NA_SEURAT_UMAP_GENOAGESAMPLE_FACET.pdf", plot = plotCluUMAP1c, width = 25, height = 20, units = "in", dpi = 300)
+
+# plotCluUMAP1d <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "GenoAgeSample", pt.size = 0.1, reduction = "umap", raster = TRUE)
+# ggsave(filename = "NA_SEURAT_UMAP_GENOAGESAMPLE.pdf", plot = plotCluUMAP1d, width = 8, height = 6, units = "in", dpi = 300)
+
+
+
+# ## RES 0.8
+# ## BARPLOT SHOWING CELLS PER CLUSTER PER GENOTYPE | RES 0.8
+# cellsPerCluster <- as.data.frame.matrix(table(seuObjSel@meta.data$RNA_snn_res.0.8, seuObjSel@meta.data$Genotype))
+# cellsPerCluster$Cluster <- paste("Cluster", sprintf("%02d", as.numeric(row.names(cellsPerCluster))), sep = "_")
+# cellsPerCluster <- cellsPerCluster[order(cellsPerCluster$Cluster),]
+# write.table(cellsPerCluster, paste("NA_SEURAT_GENOTYPE_PER_CLUSTER_1.2.txt", sep = "_"), row.names = F, col.names = T, quote = F, sep = "\t")
+
+# cellsPerCluster2 <- melt(cellsPerCluster)
+# colnames(cellsPerCluster2) <- c("CLUSTER", "GENOTYPE", "CELLS")
+# p7 <- ggplot(cellsPerCluster2) +
+#         geom_bar(aes(x = CLUSTER, y = CELLS, fill = GENOTYPE), stat = "identity", position = "fill") + 
+#         scale_y_continuous(labels = scales::percent_format()) + 
+#         theme_classic() + 
+#         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+#         NULL
+# ggsave(filename = paste("NA_SEURAT_GENOTYPE_PER_CLUSTER_0.8.pdf", sep = "_"), plot = p7, width = 9, height = 3, units = "in", dpi = 150)
+
+
+
+
+# ## BARPLOT SHOWING CELLS PER CLUSTER PER GENOTYPE | RES 1.2
+# cellsPerCluster <- as.data.frame.matrix(table(seuObjSel@meta.data$RNA_snn_res.0.8, seuObjSel@meta.data$GenoAgeSample))
+# cellsPerCluster$Cluster <- paste("Cluster", sprintf("%02d", as.numeric(row.names(cellsPerCluster))), sep = "_")
+# cellsPerCluster <- cellsPerCluster[order(cellsPerCluster$Cluster),]
+# write.table(cellsPerCluster, paste("NA_SEURAT_GENOAGESAMPLE_PER_CLUSTER_1.2.txt", sep = "_"), row.names = F, col.names = T, quote = F, sep = "\t")
+
+# cellsPerCluster2 <- melt(cellsPerCluster)
+# colnames(cellsPerCluster2) <- c("CLUSTER", "GENOAGESAMPLE", "CELLS")
+# p7 <- ggplot(cellsPerCluster2) +
+#         geom_bar(aes(x = CLUSTER, y = CELLS, fill = GENOAGESAMPLE), stat = "identity", position = "fill") + 
+#         scale_y_continuous(labels = scales::percent_format()) + 
+#         theme_classic() + 
+#         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+#         NULL
+# ggsave(filename = paste("NA_SEURAT_GENOAGESAMPLE_PER_CLUSTER_0.8.pdf", sep = "_"), plot = p7, width = 9, height = 3, units = "in", dpi = 150)
+
+
+
+##-------------------------------------------------------
+## UPDATE ANNOTATION
+rm(list = ls())
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(reshape2)
+library(clustree)
+library(harmony)
+library(scCustomize)
+set.seed(10)
+
+
+load("SEURAT_NA_P09_INTERGRATION_HARMONY_SPN.RData")
+# seuObjSel
+
+Idents(seuObjSel) <- "RNA_snn_res.0.8"
+
+table(seuObjSel@active.ident)
+#     0     1    10    11    12    13    14    15    16    17     2     3     4 
+# 16111 15045  3895  3347  3188  2560  1685  1046   807   643 12364 11461 10855 
+#     5     6     7     8     9 
+#  9748  9715  9011  8032  5181
+
+seuObjSel$CellType <- gsub("^9$", "A_PROG", seuObjSel$RNA_snn_res.0.8)
+seuObjSel$CellType <- gsub("^6$|^11$", "B_NEURONAL_PROG", seuObjSel$CellType)
+seuObjSel$CellType <- gsub("^0$|^1$|^5$|^8$|^12$", "C_dSPN", seuObjSel$CellType)
+seuObjSel$CellType <- gsub("^2$|^3$|^4$|^7$", "D_iSPN", seuObjSel$CellType)
+seuObjSel$CellType <- gsub("^10$|^13$|^14$", "E_eSPN", seuObjSel$CellType)
+seuObjSel$CellType <- gsub("^15$|^16$|^17$", "F_UNDET", seuObjSel$CellType)
+
+seuObjSel$CellTypeCluster <- paste(seuObjSel$CellType, seuObjSel$RNA_snn_res.0.8, sep = "_")
+
+dimp1 <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "CellType", pt.size = 0.1, reduction = "umap", raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE.pdf", plot = dimp1, width = 8, height = 6, units = "in", dpi = 300)
+
+dimp1b <- DimPlot_scCustom(seurat_object = seuObjSel, group.by = "CellTypeCluster", pt.size = 0.1, reduction = "umap", raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLUSTER.pdf", plot = dimp1b, width = 12, height = 6, units = "in", dpi = 300)
+
+vpl3 <- Stacked_VlnPlot(seurat_object = seuObjSel, features = c("nCount_RNA", "nFeature_RNA"), group.by = "CellType", pt.size = 0, x_lab_rotate = TRUE)
+ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_0.8.pdf", plot = vpl3 , width = 9, height = 5, units = "in", dpi = 150, useDingbats=FALSE)
+
+Idents(seuObjSel) <- "CellType"
+
+seuObjFilt <- subset(seuObjSel, idents = "F_UNDET", invert = TRUE)
+
+dimp2 <- DimPlot(seuObjFilt, group.by = "CellType", pt.size = 0.1, reduction = "umap", raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLEANED.pdf", plot = dimp2, width = 8, height = 6, units = "in", dpi = 300)
+
+dimp2b <- DimPlot(seuObjFilt, group.by = "CellTypeCluster", pt.size = 0.1, reduction = "umap", raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLUSTER_CLEANED.pdf", plot = dimp2b, width = 8, height = 6, units = "in", dpi = 300)
+
+dimp3 <- DimPlot(seuObjFilt, group.by = "CellType", pt.size = 0.1, reduction = "umap", raster = FALSE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLEANED2.pdf", plot = dimp2, width = 8, height = 6, units = "in", dpi = 300)
+
+dimp3b <- DimPlot(seuObjFilt, group.by = "CellTypeCluster", pt.size = 0.1, reduction = "umap", raster = FALSE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLUSTER_CLEANED2.pdf", plot = dimp2b, width = 8, height = 6, units = "in", dpi = 300)
+
+vpl4 <- Stacked_VlnPlot(seurat_object = seuObjFilt, features = c("nCount_RNA", "nFeature_RNA"), group.by = "CellType", pt.size = 0, x_lab_rotate = TRUE)
+ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_0.8_CLEANED.pdf", plot = vpl4 , width = 6, height = 5, units = "in", dpi = 150, useDingbats=FALSE)
+
+vpl5 <- Stacked_VlnPlot(seurat_object = seuObjFilt, features = c("nCount_RNA", "nFeature_RNA"), group.by = "CellTypeCluster", pt.size = 0, x_lab_rotate = TRUE)
+ggsave(filename = "NA_SEURAT_PLOT_ViolinPlot_0.8_CLEANED_Cluster.pdf", plot = vpl5 , width = 12, height = 5, units = "in", dpi = 150, useDingbats=FALSE)
+
+save(seuObjSel, file = "SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_ANNOTATED.RData")
+save(seuObjFilt, file = "SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_CLEANED.RData")
+
+
+
+rm(list = ls())
+load("SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_CLEANED.RData")
+# seuObjFilt
+
+Idents(seuObjFilt) <- "CellType"
+
+p09_spn_celltype_sample <- as.data.frame.matrix(table(seuObjFilt$CellType, seuObjFilt$GenoAgeSample))
+write.table(p09_spn_celltype_sample, "P09_SPN_CELLTYPE_BY_SAMPLE.txt", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+p09_spn_celltypecluster_sample <- as.data.frame.matrix(table(seuObjFilt$CellTypeCluster, seuObjFilt$GenoAgeSample))
+write.table(p09_spn_celltypecluster_sample, "P09_SPN_CELLTYPE_CLUSTER_BY_SAMPLE.txt", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+
+plotCluUMAP1 <- DimPlot(seuObjFilt, group.by = "CellType", pt.size = 0.1, reduction = "umap", label = FALSE, raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE.pdf", plot = plotCluUMAP1, width = 6.5, height = 6, units = "in", dpi = 300)
+
+plotCluUMAP2 <- DimPlot(seuObjFilt, group.by = "CellTypeCluster", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLUSTER_LABELLED.pdf", plot = plotCluUMAP2, width = 10, height = 8, units = "in", dpi = 300)
+
+plotCluUMAP2b <- DimPlot(seuObjFilt, group.by = "CellTypeCluster", pt.size = 0.1, reduction = "umap", label = FALSE, label.size = 3, raster = TRUE)
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_CLUSTER.pdf", plot = plotCluUMAP2b, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+##-------------------------------------------------------
+## LOAD LIBRARIES
+rm(list = ls())
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(reshape2)
+library(clustree)
+library(harmony)
+library(scCustomize)
+set.seed(10)
+
+
+rm(list = ls())
+load("SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_CLEANED.RData")
+# seuObjFilt
+
+Idents(seuObjFilt) <- "CellType"
+
+plotCluUMAP1 <- DimPlot_scCustom(seurat_object = seuObjFilt, group.by = "CellType", pt.size = 0.1, reduction = "umap", label = FALSE, raster = TRUE, colors_use = c("gold2", "gold4", "blue2", "red3", "green3"))
+ggsave(filename = "NA_SEURAT_UMAP_CELLTYPE_11072022.pdf", plot = plotCluUMAP1, width = 7.2, height = 6, units = "in", dpi = 300)
+
+
+
+
+
+
+
+##-------------------------------------------------------
+## FETCH THE LIST OF GENES EXPRESSED ACROSS ALL SPNs
+## without P and NP
+rm(list = ls())
+
+load("SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_CLEANED.RData")
+# seuObjFilt
+
+seuObjFiltSel <- subset(seuObjFilt, ident = c("C_dSPN", "D_iSPN", "E_eSPN"))
+
+gene.expression <- apply(seuObjFiltSel@assays$RNA@data, 1, mean)
+
+gene.expression.sorted <- sort(gene.expression, decreasing = TRUE)
+
+expressed.genes <- gene.expression.sorted[gene.expression.sorted > 0]
+
+exp_genes_sorted <- names(expressed.genes)
+
+write.table(exp_genes_sorted, "NA_P09_ALL_SPNs_EXPRESSED_GENES.txt", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+gene.expression.sorted2 <- as.data.frame(gene.expression.sorted)
+write.table(gene.expression.sorted2, "NA_P09_ALL_SPNs_ALL_GENES.txt", row.names = TRUE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+
+
+
+##-------------------------------------------------------
+## FETCH THE LIST OF GENES EXPRESSED ACROSS dSPNs ONLY
+rm(list = ls())
+
+load("SEURAT_NA_P09_INTERGRATION_HARMONY_SPN_CLEANED.RData")
+# seuObjFilt
+
+seuObjFiltSel <- subset(seuObjFilt, ident = c("C_dSPN"))
+
+gene.expression <- apply(seuObjFiltSel@assays$RNA@data, 1, mean)
+
+gene.expression.sorted <- sort(gene.expression, decreasing = TRUE)
+
+expressed.genes <- gene.expression.sorted[gene.expression.sorted > 0]
+
+exp_genes_sorted <- names(expressed.genes)
+
+write.table(exp_genes_sorted, "NA_P09_dSPNs_EXPRESSED_GENES.txt", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+
+gene.expression.sorted2 <- as.data.frame(gene.expression.sorted)
+write.table(gene.expression.sorted2, "NA_P09_dSPNs_ALL_GENES.txt", row.names = TRUE, col.names = FALSE, quote = FALSE, sep = "\t")
+
+
+#-------------------------------------------------------
+# END
+#-------------------------------------------------------
+
+
+
+
+
+
+
+
+# ##-------------------------------------------------------
+# ## SEURAT ANALYSIS | INTEGRATE DATA | PLOTS
+# ##-------------------------------------------------------
+
+# rm(list = ls())
+# library(Seurat)
+# library(dplyr)
+# library(Matrix)
+# library(ggplot2)
+# library(gridExtra)
+# library(reshape2)
+# library(ggrepel)
+# library(reticulate)
+# library(clustree)
+
+# load("SEURAT_NA_P09_DATA_FILT_NORM_PCA_CLU_INTEGRATED.RData")
+# # org.integrated, org.anchors
+
+
+# plotCluUMAP1 <- DimPlot(object = org.integrated, group.by = "Source", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_SOURCE.pdf", plot = plotCluUMAP1, width = 10, height = 8, units = "in", dpi = 300)
+
+# plotCluUMAP1b <- DimPlot(object = org.integrated, group.by = "Source", split.by = "Source", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_SOURCE_FACET.pdf", plot = plotCluUMAP1b, width = 32, height = 8, units = "in", dpi = 300)
+
+# plotCluUMAP2 <- DimPlot(object = org.integrated, group.by = "CellType", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 4, repel = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_CELLTYPES.pdf", plot = plotCluUMAP2, width = 15, height = 12, units = "in", dpi = 300)
+
+# plotCluUMAP3 <- DimPlot(object = org.integrated, group.by = "integrated_snn_res.0.8", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 4, repel = TRUE) + NoLegend()
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_CLUSTERS_RES_0.8.pdf", plot = plotCluUMAP3, width = 6, height = 6, units = "in", dpi = 300, useDingbats = FALSE)
+
+
+# clusterByCellType <- as.data.frame.matrix(table(org.integrated@meta.data$integrated_snn_res.0.8, org.integrated@meta.data$CellType))
+# write.table(clusterByCellType, "SEURAT_ORGANOIDS_CLUSTERS_BY_CELLTYPE.TSV", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+# clusterBySource <- as.data.frame.matrix(table(org.integrated@meta.data$integrated_snn_res.0.8, org.integrated@meta.data$Source))
+# write.table(clusterBySource, "SEURAT_ORGANOIDS_CLUSTERS_BY_SOURCE.TSV", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+# clusterInfo <- merge(clusterByCellType, clusterBySource, by = "row.names")
+# write.table(clusterInfo, "SEURAT_ORGANOIDS_CLUSTERS_BY_CELLTYPE_SOURCE.TSV", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+
+# DefaultAssay(org.integrated) <- "RNA"
+# Idents(org.integrated) <- "integrated_snn_res.0.8"
+
+# mygenes4 <- c("FOXP1", "MKI67", "SOX2", "ASCL1", "SOX4", "SOX11", "PAX6", "HES5", "PARD3", "EOMES", "NEUROG2", "BTG2", "NEUROD2", "NEUROD6", "TUBB3", "RBFOX3", "NCAM2", "BCL11B")
+
+# my_levels <- seq(0, max(as.numeric(org.integrated$integrated_snn_res.0.8)) - 1)
+# org.integrated@active.ident <- factor(x = org.integrated@active.ident, levels = my_levels)
+
+# vpl1 <- VlnPlot(org.integrated, features = mygenes4, ncol = 3, pt.size = 0, assay = "RNA", combine = TRUE, sort = FALSE)
+# ggsave(filename = "SEURAT_ORG_DATA_ViolinPlot_NoLog_0.8_3.pdf", plot = vpl1 , width = 32, height = 12, units = "in", dpi = 150, useDingbats=FALSE)
+
+# dpl1 <- DotPlot(object = org.integrated, features = rev(mygenes4), dot.scale = 12, dot.min = 0, cols = c("white", "blue"), col.min = 0, col.max = 3, assay = "RNA") + theme(axis.text.x = element_text(angle = 90))
+# ggsave(filename = "SEURAT_ORG_DATA_DotPlot_0.8_3.pdf", plot = dpl1, width = 12, height = 18, units = "in", dpi = 150, useDingbats=FALSE)
+
+
+# # mygenes5 <- c("SOX2", "PAX6", "HES5", "EOMES", "NEUROG2", "BTG2", "NEUROD2", "TUBB3", "NEUROD6")
+
+# # vpl2 <- VlnPlot(org.integrated, features = mygenes5, group.by = "integrated_snn_res.1.8", ncol = 3, pt.size = 0, assay = "RNA", combine = TRUE, sort = TRUE)
+# # ggsave(filename = "SEURAT_ORG_DATA_ViolinPlot_NoLog_1.8_4.pdf", plot = vpl2 , width = 32, height = 6, units = "in", dpi = 150, useDingbats=FALSE)
+
+# # dpl2 <- DotPlot(object = org.integrated, features = rev(mygenes5), dot.scale = 10, dot.min = 0, cols = c("white", "blue"), col.min = 0, col.max = 3, group.by = "integrated_snn_res.1.8", assay = "RNA") + theme(axis.text.x = element_text(angle = 90))
+# # ggsave(filename = "SEURAT_ORG_DATA_DotPlot_1.8_4.pdf", plot = dpl2, width = 8, height = 24, units = "in", dpi = 150, useDingbats=FALSE)
+
+
+
+##-------------------------------------------------------
+## SEURAT ANALYSIS | INTEGRATE DATA | END
+##-------------------------------------------------------
+
+
+
+# celltypeByCluster <- as.data.frame.matrix(table(org.integrated@meta.data$CellType, org.integrated@meta.data$integrated_snn_res.0.8))
+# write.table(celltypeByCluster, "SEURAT_ORGANOIDS_DATA_FILT_NORM_PCA_CLU_INTEGRATED_CELLTYPE_BY_CLUSTERS.TSV", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+# celltypeBySource <- as.data.frame.matrix(table(org.integrated@meta.data$CellType, org.integrated@meta.data$Source))
+# write.table(celltypeBySource, "SEURAT_ORGANOIDS_DATA_FILT_NORM_PCA_CLU_INTEGRATED_CELLTYPE_BY_SOURCE.TSV", row.names = TRUE, col.names = TRUE, quote = FALSE, sep = "\t")
+
+
+
+
+# metaDataTemp <- as.data.frame(org.integrated@meta.data)
+# umapDataTemp <- as.data.frame(Embeddings(object = org.integrated, reduction = "umap"))
+# metaData <- merge(umapDataTemp, metaDataTemp, by = "row.names")
+# row.names(metaData) <- metaData$Row.names
+# metaData$Row.names <- NULL
+
+
+# emptyCells <- row.names(metaData[metaData$CellType == "",])
+# org.integrated2 <- subset(org.integrated, cells = emptyCells, invert = TRUE)
+
+# plotCluUMAP2 <- DimPlot(object = org.integrated2, group.by = "CellType", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_CELLTYPES.pdf", plot = plotCluUMAP2, width = 16, height = 12, units = "in", dpi = 300)
+
+# plotCluUMAP3 <- DimPlot(object = org.integrated, group.by = "integrated_snn_res.0.8", pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_UMAP_CLUSTERS.pdf", plot = plotCluUMAP3, width = 16, height = 12, units = "in", dpi = 300)
+
+
+
+# DefaultAssay(org.integrated) <- "RNA"
+
+# mygenes4 <- c("FOXP1", "MKI67", "SOX2", "ASCL1", "SOX4", "SOX11", "PAX6")
+
+# fpl1 <- FeaturePlot(object = org.integrated, features = mygenes4, cols = c("gray90", "blue"), reduction = "umap", ncol = 3, pt.size = 0.05, min.cutoff = 0, max.cutoff = 3, order = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_FeaturePlot_orderT_3.pdf", plot = fpl1, width = 14, height = 12, units = "in", dpi = 300, useDingbats=FALSE)
+
+# fpl2 <- FeaturePlot(object = org.integrated, features = mygenes4, cols = c("gray90", "blue"), reduction = "umap", ncol = 3, pt.size = 0.05, min.cutoff = 0, max.cutoff = 3, order = FALSE)
+# ggsave(filename = "SEURAT_ORG_DATA_FeaturePlot_orderF_3.pdf", plot = fpl2, width = 14, height = 12, units = "in", dpi = 300, useDingbats=FALSE)
+
+# vpl1 <- VlnPlot(org.integrated, features = mygenes4, group.by = "integrated_snn_res.0.8", ncol = 3, pt.size = 0, assay = "RNA", combine = TRUE)
+# ggsave(filename = "SEURAT_ORG_DATA_ViolinPlot_NoLog_0.8_3.pdf", plot = vpl1 , width = 20, height = 6, units = "in", dpi = 150, useDingbats=FALSE)
+
+# dpl1 <- DotPlot(object = org.integrated, features = rev(mygenes4), dot.scale = 10, dot.min = 0, cols = c("white", "blue"), col.min = 0, col.max = 3, group.by = "integrated_snn_res.0.8", assay = "RNA") + theme(axis.text.x = element_text(angle = 90))
+# ggsave(filename = "SEURAT_ORG_DATA_DotPlot_0.8_3.pdf", plot = dpl1, width = 6, height = 12, units = "in", dpi = 150, useDingbats=FALSE)
+
+
+
+
+
+
+# meta_oRG <- metaData[grepl("gliogenic", metaData$cl_FullLineage),]
+
+# table(meta_oRG$integrated_snn_res.0.8)
+# sort(table(meta_oRG$integrated_snn_res.0.8), decreasing = TRUE)
+#   12   24    0    7    8    5   15   16    3   13   22   23   26    1   10   11 
+# 1497  229  117   63   12    8    2    2    2    1    1    1    1    0    0    0 
+#   14   17   18   19    2   20   21   25   27   28   29   30   31   32   33   34 
+#    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0 
+#   35    4    6    9 
+#    0    0    0    0
+
+
+
+
+
+
+
+# clusterByCellType <- as.data.frame.matrix(table(org.integrated2@meta.data$integrated_snn_res.0.8, org.integrated2@meta.data$CellType))
+# sort(clusterByCellType[row.names(clusterByCellType) == 6,], decreasing = TRUE)
+
+# metaData$NewAnnotation <- metaData$CellType
+# metaData$NewAnnotation[metaData$integrated_snn_res.0.8 %in% c(0, 5, 6)] <- "RG"
+# metaData$NewAnnotation[metaData$integrated_snn_res.0.8 %in% c(2)] <- "IPC"
+# metaData$NewAnnotation[metaData$integrated_snn_res.0.8 %in% c(1, 3, 4)] <- "NE"
+
+##-------------------------------------------------------
+## SEURAT ANALYSIS | INTEGRATE DATA | END
+##-------------------------------------------------------
+
+
+
+
+
+
+
+
+
+# ## marker genes
+# markerGenes <- c("Aqp4", "Olig1", "Cx3cr1", "Flt2", "Slc17a7", "Chat", "Npy", "Sox4", "Mki67", "Ascl1", "Dlx2", "Sox11", "Sp9", "Ppp1r1b", "Drd1", "Drd2", "Tac1", "Penk")
+# # goi <- intersect(row.names(org.integrated@assays$RNA), markerGenes)
+
+# fpl1 <- FeaturePlot(object = org.integrated, features = markerGenes, cols = c("gray90", "darkblue"), reduction = "umap", ncol = 4, pt.size = 0.1, min.cutoff = 0, max.cutoff = 3, order = TRUE)
+# ggsave(filename = paste("SEURAT_STR_DATA_UMAP_GENES_1.pdf", sep = ""), plot = fpl1, width = 14, height = 15, units = "in", dpi = 150)
+
+# fpl2 <- FeaturePlot(object = org.integrated, features = markerGenes, cols = c("gray90", "darkblue"), reduction = "umap", ncol = 4, pt.size = 0.1, min.cutoff = 0, max.cutoff = 3, order = FALSE)
+# ggsave(filename = paste("SEURAT_STR_DATA_UMAP_GENES_2.pdf", sep = ""), plot = fpl2, width = 14, height = 15, units = "in", dpi = 150)
+
+
+# save(org.integrated, org.anchors, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED.RData")
+
+
+
+
+# # # load("SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED.RData")
+# # # org.integrated, org.anchors
+
+# ## UMAP PLOT COLORED BY CLUSTERS & SOURCE
+# # plotCluUMAP1 <- DimPlot(object = org.integrated, pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# # ggsave(filename = "SEURAT_STR_DATA_UMAP_CLUSTERS.pdf", plot = plotCluUMAP1, width = 13, height = 12, units = "in", dpi = 300)
+
+# # plotCluUMAP2 <- DimPlot(object = org.integrated, pt.size = 0.1, reduction = "umap", label = FALSE, label.size = 3, repel = TRUE) + facet_wrap(~ident, nrow = 7)
+# # ggsave(filename = "SEURAT_STR_DATA_UMAP_CLUSTERS_FACET.pdf", plot = plotCluUMAP2, width = 13, height = 12, units = "in", dpi = 300)
+
+# plotCluUMAP3 <- DimPlot(object = org.integrated, pt.size = 0.1, group.by = "orig.ident", reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_STR_DATA_UMAP_SOURCES.pdf", plot = plotCluUMAP3, width = 13, height = 12, units = "in", dpi = 300)
+
+# plotCluUMAP4 <- DimPlot(object = org.integrated, pt.size = 0.1, group.by = "orig.ident", reduction = "umap", label = FALSE, label.size = 3, repel = TRUE) + facet_wrap(~orig.ident, nrow = 4)
+# ggsave(filename = "SEURAT_STR_DATA_UMAP_SOURCES_FACET.pdf", plot = plotCluUMAP4, width = 13, height = 12, units = "in", dpi = 300)
+
+
+
+
+
+
+
+# # # load("SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED.RData")
+# # # org.integrated, org.anchors
+
+# org.integrated <- FindNeighbors(object = org.integrated, dims = 1:30) %>% FindClusters(resolution = 0.8)
+
+# # UMAP PLOT COLORED BY CLUSTERS & SOURCE
+# plotCluUMAP1 <- DimPlot(object = org.integrated, pt.size = 0.1, reduction = "umap", label = TRUE, label.size = 3, repel = TRUE)
+# ggsave(filename = "SEURAT_STR_DATA_UMAP_CLUSTERS.pdf", plot = plotCluUMAP1, width = 13, height = 12, units = "in", dpi = 300)
+
+# plotCluUMAP2 <- DimPlot(object = org.integrated, pt.size = 0.1, reduction = "umap", label = FALSE, label.size = 3, repel = TRUE) + facet_wrap(~ident, nrow = 7)
+# ggsave(filename = "SEURAT_STR_DATA_UMAP_CLUSTERS_FACET.pdf", plot = plotCluUMAP2, width = 12, height = 12, units = "in", dpi = 300)
+
+# save(org.integrated, org.anchors, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED_2.RData")
+
+
+
+
+
+
+
+# load("SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED_2.RData")
+
+# seuMarkers <- FindAllMarkers(object = org.integrated)
+
+# write.table(seuMarkers, "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED_2_DEG.txt", row.names = F, col.names = T, quote = F, sep = "\t")
+# save(seuMarkers, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED_2_DEG.RData")
+
+
+
+
+# load("SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED_2.RData")
+
+# ## marker genes
+# markerGenes <- c("Foxp1", "Foxp2")
+# goi <- intersect(row.names(org.integrated@assays$RNA), markerGenes)
+# fpl <- FeaturePlot(object = org.integrated, features = goi, cols = c("gray90", "darkblue"), reduction = "umap", ncol = 2, pt.size = 0.1, min.cutoff = 0, max.cutoff = 3, order = TRUE)
+# ggsave(filename = paste("SEURAT_STR_DATA_UMAP_GENES_2.pdf", sep = ""), plot = fpl, width = 8, height = 4, units = "in", dpi = 150)
+
+
+
+# ## transfer data to classify the query cells based on reference data
+# ## query dataset = "SAUNDERS"
+# ## ref datasets = "ASHLEY", "CHEN", "MUNOZ1", "MUNOZ2", "QUAKE", "QUAKE2019"
+# org.query <- org.list[["SAUNDERS"]]
+# org.anchors <- FindTransferAnchors(reference = org.integrated, query = org.query, dims = 1:30)
+# predictions <- TransferData(anchorset = org.anchors, refdata = org.integrated$orig.ident, dims = 1:30)
+# org.query <- AddMetaData(org.query, metadata = predictions)
+
+
+# ## match prediction
+# org.query$prediction.match <- org.query$predicted.id == org.query$orig.ident
+# table(org.query$prediction.match)
+
+# save(org.integrated, org.anchors, org.list, org.query, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_INTEGRATED.RData")
+
+
+# seuObjAll <- CreateSeuratObject(seuObjAll.newdata) %>% SCTransform(vars.to.regress = c("nCount_RNA", "orig.ident")) %>% RunPCA(npcs = 100) %>% JackStraw(dims = 100) %>% ScoreJackStraw(dims = 1:100)
+# # seuObjAll <- CreateSeuratObject(seuObjAll.newdata) %>% NormalizeData() %>% FindVariableFeatures() %>% ScaleData(vars.to.regress = c("nCount_RNA", "orig.ident")) %>% RunPCA(npcs = 100) %>% JackStraw(dims = 100) %>% ScoreJackStraw(dims = 1:100)
+
+# pdf("SEURAT_STR_DATA_ElbowPlot.pdf", width = 8, height = 6)
+# ElbowPlot(object = seuObjAll, ndims = 100)
+# dev.off()
+
+# pdf("SEURAT_STR_DATA_JackstrawPlot.pdf", width = 12, height = 6)
+# JackStrawPlot(seuObjAll, dims = 1:100)
+# dev.off()
+
+# save(seuObjAll, file = "SEURAT_STR_DATA_FILT_NORM_PCA.RData")
+
+
+# ##-------------------------------------------------------
+# ## SEURAT ANALYSIS | PART 2 CLUSTERING
+# ##-------------------------------------------------------
+# load("SEURAT_STR_DATA_FILT.RData")
+# ## seuObjAll.newdata
+# load("SEURAT_STR_DATA_FILT_NORM_PCA.RData")
+# # seuObjAll
+
+# # seuObjAll <- CreateSeuratObject(seuObjAll.newdata) %>% SCTransform(vars.to.regress = "nCount_RNA") %>% RunPCA() %>% FindNeighbors(dims = 1:13) %>% RunUMAP(dims = 1:13) %>% FindClusters()
+# seuObjAll <- FindNeighbors(object = seuObjAll, dims = 1:12) %>% RunUMAP(dims = 1:12) %>% FindClusters(resolution = 0.8)
+
+# save(seuObjAll, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU.RData")
+
+# pdf("SEURAT_STR_DATA_UMAP.pdf", width = 7, height = 6)
+# DimPlot(seuObjAll, label = TRUE) + NoLegend()
+# dev.off()
+
+
+# ##-------------------------------------------------------
+# ## SEURAT ANALYSIS | PART 3 CLUSTERING
+# ##-------------------------------------------------------
+# # load("SEURAT_STR_DATA_FILT_NORM_PCA_CLU.RData")
+# seuMarkers <- FindAllMarkers(object = seuObjAll)
+# save(seuMarkers, file = "SEURAT_STR_DATA_FILT_NORM_PCA_CLU_DEG.RData")
+
+
+##-------------------------------------------------------
+## SEURAT ANALYSIS | END
+##-------------------------------------------------------
