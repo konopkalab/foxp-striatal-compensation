@@ -1,6 +1,6 @@
 # FOXP Striatal Compensation
 
-## Meta data extracted from Seurat Objects
+## Data Analysis
 [`snRNA-seq data analysis`](RNA)
 
 [`snATAC-seq data analysis`](ATAC)
