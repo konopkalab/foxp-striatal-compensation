@@ -22,7 +22,6 @@ suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(rio))
 suppressPackageStartupMessages(library(scater))
 suppressPackageStartupMessages(library(MAST))
-# source("~/onlybiohpc/pr3/organized/utility_functions.R")
 
 
 ##-------------------------------------------------------
