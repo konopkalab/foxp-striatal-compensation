@@ -22,7 +22,7 @@ suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(rio))
 suppressPackageStartupMessages(library(scater))
 suppressPackageStartupMessages(library(MAST))
-# source("~/onlybiohpc/pr3/organized/utility_functions.R")
+
 
 
 ##-------------------------------------------------------
@@ -119,21 +119,6 @@ for (myclu in unique(sort(seuObjFilt@active.ident)))
   print(sum(abs(fix_res$avg_logfc) >= 0.1375 & fix_res$adj_p_value <= 0.05))
 
   mast_allcov_glm = fix_res
-
-
-  # ## MAST package with covariates and glmer and mixed model
-  # mastfix_glmer = MAST::zlm(~Genotype + (1|Sample) + Batch + Sex + cngeneson, sca, ebayes = F, method = 'glmer')
-  
-  # summaryCond <- summary(object = mastfix_glmer, doLRT = 'GenotypeP1CKO')
-  # summaryDt <- summaryCond$datatable
-  # p_val <- summaryDt[summaryDt$component == "H", 4]
-  # genes.return <- summaryDt[summaryDt$component == "H", 1]
-  # to.return <- data.frame(p_val, row.names = genes.return$primerid)
-  # colnames(to.return)[1] = 'p_value'
-  # fix_res_glmer = to.return
-  # fix_res_glmer$adj_p_value = p.adjust(fix_res_glmer$p_value, method = 'BH')
-  # fix_res_glmer$avg_logfc = avg_logfc
-  # # sum(abs(fix_res_glmer$avg_logfc) >= 0.125 & fix_res_glmer$adj_p_value <= 0.05)
   
   ## write dge table
   write.table(mast_allcov_glm, paste("SEURAT_NA_DATA_", cluSelected, "_P1CKO_x_CTL_DEG_TABLE_PSEUDOBULK_FULL.txt", sep = ""), row.names = T, col.names = T, quote = F, sep = "\t")
@@ -163,137 +148,4 @@ for (myclu in unique(sort(seuObjFilt@active.ident)))
 ## END
 ##-------------------------------------------------------
 ##-------------------------------------------------------
-
-
-
-# 
-# 
-# ## MAST package all covariates # Batch_cDNA
-# mastfix = MAST::zlm(~Condition + Batch_cDNA, sca)
-# 
-# summaryCond <- summary(object = mastfix, doLRT = 'ConditionCS')
-# summaryDt <- summaryCond$datatable
-# p_val <- summaryDt[summaryDt$component == "H", 4]
-# genes.return <- summaryDt[summaryDt$component == "H", 1]
-# to.return <- data.frame(p_val, row.names = genes.return$primerid)
-# colnames(to.return)[1] = 'p_value'
-# fix_res = to.return
-# fix_res$adj_p_value = p.adjust(fix_res$p_value, method = 'BH')
-# fix_res$avg_logfc = avg_logfc
-# sum(abs(fix_res$avg_logfc) > 0.25 & fix_res$adj_p_value < 0.05)
-# 
-# mast_allcov_bayes = fix_res
-# 
-# 
-# 
-# # MAST package with no covariates
-# mastfix = MAST::zlm(~Species, sca)
-# 
-# summaryCond <- summary(object = mastfix, doLRT = 'Specieschimp')
-# summaryDt <- summaryCond$datatable
-# p_val <- summaryDt[summaryDt$component == "H", 4]
-# genes.return <- summaryDt[summaryDt$component == "H", 1]
-# to.return <- data.frame(p_val, row.names = genes.return$primerid)
-# colnames(to.return)[1] = 'p_value'
-# fix_res = to.return
-# fix_res$adj_p_value = p.adjust(fix_res$p_value, method = 'BH')
-# fix_res$avg_logfc = avg_logfc
-# sum(abs(fix_res$avg_logfc) > 0.25 & fix_res$adj_p_value < 0.05)
-# 
-# mast_nocov_bayes = fix_res
-# 
-# 
-# # MAST package without covariates but glm
-# mastfix = MAST::zlm(~Species, sca, ebayes = F, method = 'glm')
-# 
-# summaryCond <- summary(object = mastfix, doLRT = 'Specieschimp')
-# summaryDt <- summaryCond$datatable
-# p_val <- summaryDt[summaryDt$component == "H", 4]
-# genes.return <- summaryDt[summaryDt$component == "H", 1]
-# to.return <- data.frame(p_val, row.names = genes.return$primerid)
-# colnames(to.return)[1] = 'p_value'
-# fix_res = to.return
-# fix_res$adj_p_value = p.adjust(fix_res$p_value, method = 'BH')
-# fix_res$avg_logfc = avg_logfc
-# sum(abs(fix_res$avg_logfc) > 0.25 & fix_res$adj_p_value < 0.05)
-# 
-# mast_nocov_glm = fix_res
-# 
-# # MAST package with covariates and glm
-# mastfix = MAST::zlm(~Species + cngeneson + log(human_age) + lib_batch + sex, sca, ebayes = F, method = 'glm')
-# 
-# summaryCond <- summary(object = mastfix, doLRT = 'Specieschimp')
-# summaryDt <- summaryCond$datatable
-# p_val <- summaryDt[summaryDt$component == "H", 4]
-# genes.return <- summaryDt[summaryDt$component == "H", 1]
-# to.return <- data.frame(p_val, row.names = genes.return$primerid)
-# colnames(to.return)[1] = 'p_value'
-# fix_res = to.return
-# fix_res$adj_p_value = p.adjust(fix_res$p_value, method = 'BH')
-# fix_res$avg_logfc = avg_logfc
-# sum(abs(fix_res$avg_logfc) > 0.25 & fix_res$adj_p_value < 0.05)
-# 
-# mast_allcov_glm = fix_res
-# 
-# # MAST package with covariates and glmer and mixed model
-# mastfix = MAST::zlm(~Species + (1|Sample) + cngeneson + log(human_age) + lib_batch + sex, sca, ebayes = F, method = 'glmer')
-# 
-# summaryCond <- summary(object = mastfix, doLRT = 'Specieschimp')
-# summaryDt <- summaryCond$datatable
-# p_val <- summaryDt[summaryDt$component == "H", 4]
-# genes.return <- summaryDt[summaryDt$component == "H", 1]
-# to.return <- data.frame(p_val, row.names = genes.return$primerid)
-# colnames(to.return)[1] = 'p_value'
-# fix_res = to.return
-# fix_res$adj_p_value = p.adjust(fix_res$p_value, method = 'BH')
-# fix_res$avg_logfc = avg_logfc
-# sum(abs(fix_res$avg_logfc) > 0.25 & fix_res$adj_p_value < 0.05)
-# 
-# mast_allcov_glm_mixed = fix_res
-# 
-# 
-
-
-
-
-
-
-
-
-# strSCE <- as.SingleCellExperiment(str.integrated)
-
-# strGroups <- colData(strSCE)[, c("ConditionSample", "Condition")]
-# strPseudoSCE <- sumCountsAcrossCells(strSCE, strGroups)
-# strAggMat <- strPseudoSCE@assays@data$sum
-# colnames(strAggMat) <- colData(strPseudoSCE)[['ConditionSample']]
-
-
-# csExp = which(rowSums(strAggMat[, grepl('CS', colnames(strAggMat))] <= 10) == 0) %>% names
-# sdExp = which(rowSums(strAggMat[, grepl('SD', colnames(strAggMat))] <= 10) == 0) %>% names
-# expgns = Reduce(union, list(csExp, sdExp))
-
-# DefaultAssay(str.integrated) <- "RNA"
-# selSCE <- as.SingleCellExperiment(str.integrated)
-
-# selGroups <- colData(selSCE)[, c("ConditionSample", "Condition", "Sample", "Batch")]
-# selPseudoSCE <- sumCountsAcrossCells(selSCE, selGroups)
-# selGroups <- colData(selPseudoSCE)[, c("ConditionSample", "Condition", "Sample", "Batch")]
-# selGroups$ConditionSample <- factor(selGroups$ConditionSample)
-# selGroups$Condition <- factor(selGroups$Condition)
-# selGroups$Sample <- factor(selGroups$Sample)
-# selGroups$Batch <- factor(selGroups$Batch)
-
-# selAggMat <- selPseudoSCE@assays@data$sum
-# colnames(selAggMat) = colData(selPseudoSCE)[['ConditionSample']]
-# selAggMat <- selAggMat[expgns,]
-
-# selDGEL <- DGEList(counts = selAggMat)
-# selDGEL <- calcNormFactors(selDGEL)
-# selDesign <- model.matrix(~Condition, data = selGroups)
-# selDGEL <- estimateDisp(selDGEL, selDesign)
-
-# selFit <- glmFit(selDGEL,selDesign)
-# selLrt <- glmLRT(selFit)
-# selRes <- topTags(selLrt, n = nrow(selAggMat), sort.by = 'PValue') %>% as.data.frame
-# DEGs <- subset(selRes, FDR <= 0.05)
 
